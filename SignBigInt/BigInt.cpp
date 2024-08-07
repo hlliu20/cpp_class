@@ -79,8 +79,8 @@ bool BigInt::operator<(const BigInt & b) const{
 }
 
 bool BigInt::isZero()const{return digits.size()==0;}
-int BigInt::size()const{return digits.size()?digits.size():1;}
-int BigInt::length()const{return size();}
+unsigned int BigInt::size()const{return digits.size()?digits.size():1;}
+unsigned int BigInt::length()const{return size();}
 int BigInt::at(unsigned int n)const{
     if(n<size()) return digits[n];
     else return -1;
@@ -96,7 +96,7 @@ BigInt BigInt::addOne(int n) const{
     else if(n==0){a=b;}
     else{
         int carry=0,sum=0;
-        for(int i=0;i<digits.size();++i){
+        for(size_t i=0;i<digits.size();++i){
             sum = n + digits[i] + carry;
             carry = sum/10;
             a.digits.push_back(sum%10);
@@ -184,7 +184,7 @@ BigInt BigInt::operator-(const BigInt & bi) const{
                 c.digits.push_back(sub);
             }
         }
-        
+
     }else if(s1 > s2){
         s3 = s1 - s2;
         for(i=s1-1;i>=s3;--i){
@@ -227,7 +227,7 @@ BigInt BigInt::mulOne(int n) const{
     BigInt a = *this;
     reverse(a.digits.begin(),a.digits.end());
     int carry = 0, mul = 0;
-    for(int i=0;i<a.digits.size();++i){
+    for(size_t i=0;i<a.digits.size();++i){
         mul = carry + a.digits[i]*n;
         carry = mul / 10;
         a.digits[i] = mul % 10;
@@ -254,8 +254,8 @@ BigInt BigInt::operator*(const BigInt & bi) const{
 }
 BigInt BigInt::operator/(const BigInt & b) const{
     // 如果除数或被除数为0，返回0 !!！ 除数为0时未抛出异常
-    if(b.isZero() || isZero()) return BigInt(); 
-    if(*this < b) return 0; 
+    if(b.isZero() || isZero()) return BigInt();
+    if(*this < b) return 0;
     else if(*this == b) return 1;
     else{
         BigInt ret,tmp;

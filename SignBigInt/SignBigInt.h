@@ -27,8 +27,8 @@ public:
     friend std::istream & operator>>(std::istream &,SignBigInt &);//重载输入运算符>>
     friend std::ostream & operator<<(std::ostream &,const SignBigInt &);//重载输出运算符<<
 
-    int size()const;  // 输出数字位数
-    int length()const;  // =size()
+    unsigned int size()const;  // 输出数字位数
+    unsigned int length()const;  // =size()
     int at(unsigned int n)const;  // 获取从高位到低位的第n+1位数，从0开始，超范围返回-1
     int operator[](unsigned int n)const;// 获取从高位到低位的第n+1位数，从0开始，不检查是否超范围，可能出现编译正常，运行出错的情况
 
@@ -47,7 +47,7 @@ public:
     SignBigInt operator/(const SignBigInt & b) const;
     SignBigInt operator>>(unsigned int n) const;
     SignBigInt operator<<(unsigned int n) const;
-    
+
     friend SignBigInt operator+(long long a, const SignBigInt & b);
     friend SignBigInt operator-(long long a, const SignBigInt & b);
     friend SignBigInt operator*(long long a, const SignBigInt & b);

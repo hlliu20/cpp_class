@@ -37,9 +37,9 @@ public:
     bool operator<(const BigInt & b) const;
 
     bool isZero()const;  // 判断自身是否为0
-    int size()const;  // 输出数字位数
-    int length()const;  // =size()
-    
+    unsigned int size()const;  // 输出数字位数
+    unsigned int length()const;  // =size()
+
     int at(unsigned int n)const;  // 获取从高位到低位的第n+1位数，从0开始，超范围返回-1
     int operator[](unsigned int n)const;// 获取从高位到低位的第n+1位数，从0开始，不检查是否超范围，可能出现编译正常，运行出错的情况
 
@@ -53,7 +53,7 @@ public:
     BigInt operator/(const BigInt & b) const;
     BigInt operator>>(unsigned int n) const;
     BigInt operator<<(unsigned int n) const;
-    
+
     friend BigInt operator+(unsigned long long a, const BigInt & b);
     friend BigInt operator-(unsigned long long a, const BigInt & b);
     friend BigInt operator*(unsigned long long a, const BigInt & b);

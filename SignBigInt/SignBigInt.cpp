@@ -24,7 +24,7 @@ SignBigInt & SignBigInt::operator=(const std::string& s){
     num.digits.clear();
     size_t i=0;
     if(s[0] == '+'  ||  s[0] == '-') i=1;
-    for(size_t i=0;i<s.size();++i){
+    for(i=0;i<s.size();++i){
         num.digits.push_back((int)(s.at(i)-'0'));
     }
     return *this;
@@ -66,8 +66,8 @@ SignBigInt operator*(long long a, const SignBigInt &b)
 {return SignBigInt(a) * b;}
 SignBigInt operator/(long long a, const SignBigInt &b)
 {return SignBigInt(a) / b;}
-int SignBigInt::size()const{return num.digits.size()?num.digits.size():1;}
-int SignBigInt::length()const{return size();}
+unsigned int SignBigInt::size()const{return num.digits.size()?num.digits.size():1;}
+unsigned int SignBigInt::length()const{return size();}
 int SignBigInt::at(unsigned int n)const{
     if(n<size()) return num.digits[n];
     else return -1;
