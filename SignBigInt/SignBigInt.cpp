@@ -1,13 +1,28 @@
 #include"SignBigInt.h"
 
 SignBigInt::SignBigInt(){sign = true;}
-SignBigInt::SignBigInt(long long l){*this = l;}
+SignBigInt::SignBigInt(long long l){
+    if(l<0){sign=false;l=-l;}else{sign=true;}
+    num = BigInt((unsigned long long)l);
+}
 SignBigInt::SignBigInt(const SignBigInt & a){
     sign = a.sign;
     num.digits.assign(a.num.digits.begin(),a.num.digits.end());
 }
-SignBigInt::SignBigInt(const std::string& s){*this = s;}
+SignBigInt::SignBigInt(const std::string& s){
+    std::string _s = s;
+    strip_leading_sign(_s);
+    if(_s.size()==0){sign=true;}
+    if(_s[0] == '-'){sign=false;}
+    else {sign = true;}
+    size_t i=0;
+    if(_s[0] == '+'  ||  _s[0] == '-') i=1;
+    for(;i<_s.size();++i){
+        num.digits.push_back((int)(_s.at(i)-'0'));
+    }
+}
 SignBigInt::SignBigInt(bool s, BigInt n){sign = s;num = n;}
+SignBigInt::SignBigInt(BigInt n){sign=true;num = n;}
 SignBigInt & SignBigInt::operator=(long long l){
     if(l<0){sign=false;l = - l;}else{sign=true;}
     num.digits.clear();
@@ -18,14 +33,16 @@ SignBigInt & SignBigInt::operator=(long long l){
     return *this;
 }
 SignBigInt & SignBigInt::operator=(const std::string& s){
-    if(s.size()==0){sign=true;return *this;}
-    if(s[0] == '-'){sign=false;}
+    std::string _s=s;
+    strip_leading_sign(_s);
+    if(_s.size()==0){sign=true;return *this;}
+    if(_s[0] == '-'){sign=false;}
     else {sign = true;}
     num.digits.clear();
     size_t i=0;
-    if(s[0] == '+'  ||  s[0] == '-') i=1;
-    for(i=0;i<s.size();++i){
-        num.digits.push_back((int)(s.at(i)-'0'));
+    if(_s[0] == '+'  ||  _s[0] == '-') i=1;
+    for(;i<_s.size();++i){
+        num.digits.push_back((int)(_s.at(i)-'0'));
     }
     return *this;
 }
@@ -33,6 +50,7 @@ SignBigInt & SignBigInt::operator+=(const SignBigInt b){*this = *this + b;return
 SignBigInt & SignBigInt::operator-=(const SignBigInt b){*this = *this - b;return *this;}
 SignBigInt & SignBigInt::operator*=(const SignBigInt b){*this = *this * b;return *this;}
 SignBigInt & SignBigInt::operator/=(const SignBigInt b){*this = *this / b;return *this;}
+SignBigInt & SignBigInt::operator%=(const SignBigInt b){*this = *this % b;return *this;}
 SignBigInt & SignBigInt::operator>>=(unsigned int n){
     if(n>=num.size()){num.digits.clear();}
     else {num.digits.assign(num.digits.begin(),num.digits.begin()+size()-n);}
@@ -66,6 +84,8 @@ SignBigInt operator*(long long a, const SignBigInt &b)
 {return SignBigInt(a) * b;}
 SignBigInt operator/(long long a, const SignBigInt &b)
 {return SignBigInt(a) / b;}
+SignBigInt operator%(long long a, const SignBigInt &b)
+{return SignBigInt(a) % b;}
 unsigned int SignBigInt::size()const{return num.digits.size()?num.digits.size():1;}
 unsigned int SignBigInt::length()const{return size();}
 int SignBigInt::at(unsigned int n)const{
@@ -176,7 +196,69 @@ SignBigInt SignBigInt::operator/(const SignBigInt &b) const
     re.num = num / b.num;
     return re;
 }
+SignBigInt SignBigInt::operator%(const SignBigInt &b) const
+{
+    SignBigInt re;
+    re.sign = b.sign;
+    if(sign == b.sign){re.num = num%b.num;}
+    else {re.num=b.num-num%b.num;}
+    return re;
+}
+
 SignBigInt SignBigInt::operator>>(unsigned int n) const
 {return SignBigInt(sign,num >> n);}
 SignBigInt SignBigInt::operator<<(unsigned int n) const
 {return SignBigInt(sign,num << n);}
+
+SignBigInt SignBigInt::operator+()const{return *this;}
+SignBigInt SignBigInt::operator-()const{
+    return SignBigInt(!sign, num);
+}
+
+SignBigInt SignBigInt::operator++(){*this += 1;return *this;}
+SignBigInt SignBigInt::operator++(int){SignBigInt tp=*this;*this += 1;return tp;}
+SignBigInt SignBigInt::operator--(){*this -= 1;return *this;}
+SignBigInt SignBigInt::operator--(int){SignBigInt tp=*this;*this -= 1;return tp;}
+
+std::string SignBigInt::to_string()const{
+    std::string s;
+    if(!sign) s='-';
+    for(int n:num.digits){
+        s += ('0' + n);
+    }
+    return s;
+}
+int SignBigInt::to_int()const{
+    BigInt t = (num) % (BigInt(~(unsigned int)0)>>1);
+    unsigned int r=0;
+    for(auto it=t.digits.rbegin();it<t.digits.rend();++it){
+        r = r*10 + *it;
+    }
+    return r;
+}
+long SignBigInt::to_long()const{
+    BigInt t = num % (BigInt(~(unsigned long)0)>>1);
+    unsigned long r=0;
+    for(auto it=t.digits.rbegin();it<t.digits.rend();++it){
+        r = r*10 + *it;
+    }
+    return r;
+}
+long long SignBigInt::to_long_long()const{
+    BigInt t = num % (BigInt(~(unsigned long long)0)>>1);
+    unsigned long long r=0;
+    for(auto it=t.digits.rbegin();it<t.digits.rend();++it){
+        r = r*10 + *it;
+    }
+    return r;
+}
+
+
+void strip_leading_sign(std::string& s){
+    size_t i=0;
+    for(;i < s.size();++i){
+        if((s[i] >= '1' && s[i] <= '9') || (s[i]=='-') || (s[i]=='+'))
+            break;
+    }
+    if(i != s.size()) s = s.substr(i);
+}

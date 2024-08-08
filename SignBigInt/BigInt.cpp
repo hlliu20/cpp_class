@@ -2,13 +2,35 @@
 #include"BigInt.h"
 
 BigInt::BigInt(){}
-BigInt::BigInt(long long l){*this = l;}
+BigInt::BigInt(unsigned long long l){
+    for(;l>0;l/=10){
+        digits.push_back((int)(l%10));
+    }
+    std::reverse(digits.begin(),digits.end());
+}
 BigInt::BigInt(const BigInt & a){digits.assign(a.digits.begin(),a.digits.end());}
 BigInt::BigInt(const BigInt & a, int s1, int s2){
     digits.assign(a.digits.begin()+s1,a.digits.begin()+s1+s2);
 }
-BigInt::BigInt(const std::string& s){*this = s;}
-BigInt & BigInt::operator=(long long l){
+BigInt::BigInt(const std::string& s){
+    std::string _s = s;
+    strip_leading(_s);
+    if(is_valid_number(_s)){
+        for(size_t i=0;i<_s.size();++i){
+            digits.push_back((int)(_s.at(i)-'0'));
+        }
+    } else {
+        std::cout << std::endl << "\"" << s << "\" is not a valid number!" << std::endl;
+    }
+
+}
+BigInt & BigInt::operator=(const BigInt& b){
+    if(this != &b){
+        digits.assign(b.digits.begin(), b.digits.end());
+    }
+    return *this;
+}
+BigInt & BigInt::operator=(unsigned long long l){
     digits.clear();
     for(;l>0;l/=10){
         digits.push_back((int)(l%10));
@@ -17,47 +39,64 @@ BigInt & BigInt::operator=(long long l){
     return *this;
 }
 BigInt & BigInt::operator=(const std::string& s){
+    std::string _s = s;
+    strip_leading(_s);
+    if(!is_valid_number(_s)){
+        std::cout << s << " is not a valid number!" << std::endl;
+        return *this;
+    }
     digits.clear();
-    for(size_t i=0;i<s.size();++i){
-        digits.push_back((int)(s.at(i)-'0'));
+    for(size_t i=0;i<_s.size();++i){
+        digits.push_back((int)(_s.at(i)-'0'));
     }
     return *this;
 }
-std::istream & operator>>(std::istream & i,BigInt & a){
+std::istream & operator>>(std::istream& i,BigInt& a){
     std::string s;i >> s;a = s;
     if(a.digits[0] == 0) {
-        auto it = find_if(a.digits.begin(),a.digits.end(),[](int x){ return x != 0;});
-        a.digits.erase(a.digits.begin(), it);
+        strip_digits_leading_zeroes(a.digits);
     }
     return i;
 }
-std::ostream & operator<<(std::ostream & o,const BigInt & b){
+std::ostream & operator<<(std::ostream& o,const BigInt& b){
     if(b.isZero()) o << "0";
     else for(int n:b.digits){o << n;}
     return o;
 }
-bool BigInt::operator==(const BigInt & b) const{
+bool BigInt::operator==(const BigInt& b) const{
     if(digits.size()!=b.digits.size()){return false;}
-    else if(digits != b.digits){return false;}
-    else {return true;}
+    else{
+        for(size_t i=0;i<size();++i){
+            if(at(i) != b.at(i)) return false;
+        }
+    }
+    return true;
 }
-bool BigInt::operator!=(const BigInt & b) const{
-    if(digits.size()!=b.digits.size()){return true;}
-    else if(digits != b.digits){return true;}
-    else {return false;}
+bool BigInt::operator!=(const BigInt& b) const{
+    return !(*this == b);
 }
-bool BigInt::operator>=(const BigInt & b) const{
+bool BigInt::operator>=(const BigInt& b) const{
     if(digits.size()<b.digits.size()){return false;}
-    else if(digits < b.digits){return false;}
-    else {return true;}
+    else if(digits.size()>b.digits.size()) {return true;}
+    else {
+        for(size_t i=0;i<size();++i){
+            if(at(i) < b.at(i)) return false;
+        }
+    }
+    return true;
 }
-bool BigInt::operator<=(const BigInt & b) const{
-    if(digits.size()>b.digits.size()){return false;}
-    else if(digits > b.digits){return false;}
-    else {return true;}
+bool BigInt::operator<=(const BigInt& b) const{
+    if(digits.size()<b.digits.size()){return true;}
+    else if(digits.size()>b.digits.size()) {return false;}
+    else {
+        for(size_t i=0;i<size();++i){
+            if(at(i) > b.at(i)) return false;
+        }
+    }
+    return true;
 }
 
-bool BigInt::operator>(const BigInt & b) const{
+bool BigInt::operator>(const BigInt& b) const{
     if(digits.size() < b.digits.size()){return false;}
     else if(digits.size() > b.digits.size()){return true;}
     else {
@@ -67,7 +106,7 @@ bool BigInt::operator>(const BigInt & b) const{
         return true;
     }
 }
-bool BigInt::operator<(const BigInt & b) const{
+bool BigInt::operator<(const BigInt& b) const{
     if(digits.size() > b.digits.size()){return false;}
     else if(digits.size() < b.digits.size()){return true;}
     else {
@@ -77,6 +116,21 @@ bool BigInt::operator<(const BigInt & b) const{
         return true;
     }
 }
+
+bool BigInt::operator<(const unsigned long long& l) const{return *this < BigInt(l);}
+bool BigInt::operator>(const unsigned long long& l) const{return *this > BigInt(l);}
+bool BigInt::operator<=(const unsigned long long& l) const{return *this <= BigInt(l);}
+bool BigInt::operator>=(const unsigned long long& l) const{return *this >= BigInt(l);}
+bool BigInt::operator==(const unsigned long long& l) const{return *this == BigInt(l);}
+bool BigInt::operator!=(const unsigned long long& l) const{return *this != BigInt(l);}
+bool BigInt::operator<(const std::string& s) const{return *this < BigInt(s);}
+bool BigInt::operator>(const std::string& s) const{return *this > BigInt(s);}
+bool BigInt::operator<=(const std::string& s) const{return *this <= BigInt(s);}
+bool BigInt::operator>=(const std::string& s) const{return *this >= BigInt(s);}
+bool BigInt::operator==(const std::string& s) const{return *this == BigInt(s);}
+bool BigInt::operator!=(const std::string& s) const{return *this != BigInt(s);}
+
+
 
 bool BigInt::isZero()const{return digits.size()==0;}
 unsigned int BigInt::size()const{return digits.size()?digits.size():1;}
@@ -108,12 +162,11 @@ BigInt BigInt::addOne(int n) const{
     }
     reverse(a.digits.begin(),a.digits.end());
     if(a.digits[0] != 0) return a;
-    auto it = find_if(a.digits.begin(),a.digits.end(),[](int x){ return x != 0;});
-    a.digits.erase(a.digits.begin(), it);
+    strip_digits_leading_zeroes(a.digits);
     return a;
 }
 
-BigInt BigInt::operator+(const BigInt & bi) const{
+BigInt BigInt::operator+(const BigInt& bi) const{
     BigInt c;
     if(digits.size()==0){c=bi;return c;}
     else if(bi.digits.size()==0){return *this;}
@@ -157,19 +210,18 @@ BigInt BigInt::operator+(const BigInt & bi) const{
     }
     reverse(c.digits.begin(),c.digits.end());
     if(c.digits[0] != 0) return c;
-    auto it = find_if(c.digits.begin(),c.digits.end(),[](int x){ return x != 0;});
-    c.digits.erase(c.digits.begin(), it);
+    strip_digits_leading_zeroes(c.digits);
     return c;
 }
 
 
-BigInt BigInt::operator-(const BigInt & bi) const{
+BigInt BigInt::operator-(const BigInt& bi) const{
     BigInt a=*this,b=bi,c;
     int carry = 0,sub = 0,i=0;
     int s1 = a.digits.size(), s2 = b.digits.size(),s3=0;
     if(s1 == s2){
-        if(a.digits == b.digits) return BigInt();
-        else if(a.digits > b.digits){
+        if(a==b) return BigInt();
+        else if(a>b){
             for(i=s1-1;i>=0;--i){
                 sub = a.digits[i] - b.digits[i] - carry;
                 if(sub < 0){sub += 10;carry = 1;}
@@ -218,8 +270,7 @@ BigInt BigInt::operator-(const BigInt & bi) const{
     }
     reverse(c.digits.begin(),c.digits.end());
     if(c.digits[0] != 0) return c;
-    auto it = find_if(c.digits.begin(),c.digits.end(),[](int x){ return x != 0;});
-    c.digits.erase(c.digits.begin(), it);
+    strip_digits_leading_zeroes(c.digits);
     return c;
 }
 
@@ -237,7 +288,7 @@ BigInt BigInt::mulOne(int n) const{
     return a;
 }
 
-BigInt BigInt::operator*(const BigInt & bi) const{
+BigInt BigInt::operator*(const BigInt& bi) const{
     if(isZero() || bi.isZero()) return BigInt();  // 如果两个数中有0，则相乘结果为0
     BigInt re;
     int scale = 1;
@@ -252,7 +303,7 @@ BigInt BigInt::operator*(const BigInt & bi) const{
     }
     return re;
 }
-BigInt BigInt::operator/(const BigInt & b) const{
+BigInt BigInt::operator/(const BigInt& b) const{
     // 如果除数或被除数为0，返回0 !!！ 除数为0时未抛出异常
     if(b.isZero() || isZero()) return BigInt();
     if(*this < b) return 0;
@@ -261,27 +312,63 @@ BigInt BigInt::operator/(const BigInt & b) const{
         BigInt ret,tmp;
         int s1 = size(),s2 = b.size(),s3,dig=0;
         s3 = s1 - s2;
-        for(int i=0;i<=s3;++i){
-            if(tmp == 0) {tmp = BigInt(*this, i, s2);
-            } else {
-                tmp.digits.push_back(digits[s2+i-1]);
+        tmp = BigInt(*this, 0, s2);
+        if(tmp < b){ret.digits.push_back(dig);}
+        else {
+            while(tmp >= b){
+                tmp = tmp - b;
+                dig += 1;
             }
+            ret.digits.push_back(dig);
+        }
+        for(int i=0;i<s3;++i){
+            tmp.digits.push_back(digits[s2+i]);
             dig = 0;
             if(tmp < b){ret.digits.push_back(dig);}
             else {
-                while(tmp > b){
+
+                while(tmp >= b){
                     tmp = tmp - b;
-                    dig += 1;
+                    ++dig;
                 }
                 ret.digits.push_back(dig);
             }
         }
         if(ret.digits[0] != 0) return ret;
-        auto it = find_if(ret.digits.begin(),ret.digits.end(),[](int x){ return x != 0;});
-        ret.digits.erase(ret.digits.begin(), it);
+        strip_digits_leading_zeroes(ret.digits);
         return ret;
     }
 }
+
+BigInt BigInt::operator%(const BigInt& b) const{
+    // 如果除数为0，返回*this !!！ 除数为0时未抛出异常
+    if((*this < b) || b.isZero()) return *this;
+    else{
+        BigInt tmp;
+        int s1 = size(),s2 = b.size(),s3;
+        s3 = s1 - s2;
+        tmp = BigInt(*this, 0, s2);
+        for(int i=0;i<s3;++i){
+            tmp.digits.push_back(digits.at(i+s2));
+            /*std::cout << std::endl << "tmp=" << tmp << std::endl;
+            std::cout << "b=" << b << std::endl;
+            std::cout << "tmp>=b" << (tmp>=b) << std::endl;*/
+            while(tmp >= b){tmp -= b;}
+        }
+        return tmp;
+    }
+}
+
+BigInt BigInt::operator+(const unsigned long long& l) const{return *this + BigInt(l);}
+BigInt BigInt::operator-(const unsigned long long& l) const{return *this - BigInt(l);}
+BigInt BigInt::operator*(const unsigned long long& l) const{return *this * BigInt(l);}
+BigInt BigInt::operator/(const unsigned long long& l) const{return *this / BigInt(l);}
+BigInt BigInt::operator%(const unsigned long long& l) const{return *this % BigInt(l);}
+BigInt BigInt::operator+(const std::string& s) const{return *this + BigInt(s);}
+BigInt BigInt::operator-(const std::string& s) const{return *this - BigInt(s);}
+BigInt BigInt::operator*(const std::string& s) const{return *this * BigInt(s);}
+BigInt BigInt::operator/(const std::string& s) const{return *this / BigInt(s);}
+BigInt BigInt::operator%(const std::string& s) const{return *this % BigInt(s);}
 
 BigInt BigInt::operator>>(unsigned int n) const{
     if(n>=size()) return BigInt();
@@ -301,15 +388,27 @@ BigInt BigInt::operator<<(unsigned int n) const{
     }
 }
 
-BigInt operator+(unsigned long long a, const BigInt & b){return (b+a);}
-BigInt operator-(unsigned long long a, const BigInt & b){return (BigInt(a)-b);}
-BigInt operator*(unsigned long long a, const BigInt & b){return (b*a);}
-BigInt operator/(unsigned long long a, const BigInt & b){return (BigInt(a)/b);}
+BigInt operator+(unsigned long long a, const BigInt& b){return (b+a);}
+BigInt operator-(unsigned long long a, const BigInt& b){return (BigInt(a)-b);}
+BigInt operator*(unsigned long long a, const BigInt& b){return (b*a);}
+BigInt operator/(unsigned long long a, const BigInt& b){return (BigInt(a)/b);}
 
-BigInt & BigInt::operator+=(const BigInt b){*this = *this + b;return *this;}
-BigInt & BigInt::operator-=(const BigInt b){*this = *this - b;return *this;}
-BigInt & BigInt::operator*=(const BigInt b){*this = *this * b;return *this;}
-BigInt & BigInt::operator/=(const BigInt b){*this = *this / b;return *this;}
+
+BigInt& BigInt::operator+=(const BigInt& b){*this = *this + b;return *this;}
+BigInt& BigInt::operator-=(const BigInt& b){*this = *this - b;return *this;}
+BigInt& BigInt::operator*=(const BigInt& b){*this = *this * b;return *this;}
+BigInt& BigInt::operator/=(const BigInt& b){*this = *this / b;return *this;}
+BigInt& BigInt::operator%=(const BigInt& b){*this = *this % b;return *this;}
+BigInt& BigInt::operator+=(const unsigned long long& l){*this = *this + BigInt(l);return *this;}
+BigInt& BigInt::operator-=(const unsigned long long& l){*this = *this - BigInt(l);return *this;}
+BigInt& BigInt::operator*=(const unsigned long long& l){*this = *this * BigInt(l);return *this;}
+BigInt& BigInt::operator/=(const unsigned long long& l){*this = *this / BigInt(l);return *this;}
+BigInt& BigInt::operator%=(const unsigned long long& l){*this = *this % BigInt(l);return *this;}
+BigInt& BigInt::operator+=(const std::string& s){*this = *this + BigInt(s);return *this;}
+BigInt& BigInt::operator-=(const std::string& s){*this = *this - BigInt(s);return *this;}
+BigInt& BigInt::operator*=(const std::string& s){*this = *this * BigInt(s);return *this;}
+BigInt& BigInt::operator/=(const std::string& s){*this = *this / BigInt(s);return *this;}
+BigInt& BigInt::operator%=(const std::string& s){*this = *this % BigInt(s);return *this;}
 BigInt & BigInt::operator>>=(unsigned int n){
     // *this = *this >> n;
     if(n>=size()){digits.clear();}
@@ -322,4 +421,86 @@ BigInt & BigInt::operator<<=(unsigned int n){
         digits.insert(digits.end(), n, 0);
     }
     return *this;
+}
+
+BigInt& BigInt::operator++(){*this += 1;return *this;}
+BigInt BigInt::operator++(int){BigInt tp=*this;*this += 1;return tp;}
+BigInt& BigInt::operator--(){
+    if(*this == BigInt()){
+        std::cout << std::endl << "0-1=-1 ! 将返回 0。" << std::endl;
+    } else {*this -= 1;}
+    return *this;
+}
+BigInt BigInt::operator--(int){
+    if(*this == BigInt()){
+        std::cout << std::endl << "0-1=-1 ! 将返回 0。" << std::endl;
+        return *this;
+    } else {
+        BigInt tp=*this;*this -= 1;return tp;
+    }
+
+}
+
+std::string BigInt::to_string()const{
+    std::string s;
+    for(int n:digits){
+        s += ('0' + n);
+    }
+    return s;
+}
+unsigned int BigInt::to_uint()const{
+    BigInt t = (*this) % (BigInt(~(unsigned int)0)+1);
+    unsigned int r=0;
+    for(auto it=t.digits.rbegin();it<t.digits.rend();++it){
+        r = r*10 + *it;
+    }
+    return r;
+}
+unsigned long BigInt::to_ulong()const{
+    BigInt t = *this % (BigInt(~(unsigned long)0)+1);
+    unsigned long r=0;
+    for(auto it=t.digits.rbegin();it<t.digits.rend();++it){
+        r = r*10 + *it;
+    }
+    return r;
+}
+unsigned long long BigInt::to_ulong_long()const{
+    BigInt t = *this % (BigInt(~(unsigned long long)0)+1);
+    unsigned long long r=0;
+    for(auto it=t.digits.rbegin();it<t.digits.rend();++it){
+        r = r*10 + *it;
+    }
+    return r;
+}
+
+
+
+void strip_digits_leading_zeroes(std::vector<int>& v){
+    auto it = find_if(v.begin(),v.end(),[](int x){ return x != 0;});
+    v.erase(v.begin(), it);
+}
+
+void strip_leading(std::string& s){
+    size_t i=0;
+    for(;i < s.size();++i){
+        if(s[i] >= '1' && s[i] <= '9')
+            break;
+    }
+    if(i == s.size()) s = "0";
+    else s = s.substr(i);
+}
+
+bool is_valid_number(const std::string& s){
+    for(char digit : s)
+        if(digit < '0' || digit > '9')
+            return false;
+    return true;
+}
+
+void add_leading_zeroes(std::string& s, size_t num_zeroes){
+    s = std::string(num_zeroes, '0') + s;
+}
+
+void add_trailing_zeroes(std::string& s, size_t num_zeroes){
+    s += std::string(num_zeroes, '0');
 }

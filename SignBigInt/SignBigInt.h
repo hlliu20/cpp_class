@@ -13,13 +13,16 @@ public:
     SignBigInt(const SignBigInt &);//拷贝构造函数
     SignBigInt(const std::string&);//字符串装大整数
     SignBigInt(bool s, BigInt n);
+    SignBigInt(BigInt n);
 
     //重载赋值运算符
     SignBigInt & operator=(long long);
     SignBigInt & operator=(const std::string&);
+    SignBigInt & operator=(const &);
     SignBigInt & operator+=(const SignBigInt b);
     SignBigInt & operator-=(const SignBigInt b);
     SignBigInt & operator*=(const SignBigInt b);
+    SignBigInt & operator%=(const SignBigInt b);
     SignBigInt & operator/=(const SignBigInt b);
     SignBigInt & operator>>=(unsigned int n);
     SignBigInt & operator<<=(unsigned int n);
@@ -45,6 +48,7 @@ public:
     SignBigInt operator-(const SignBigInt & b) const;
     SignBigInt operator*(const SignBigInt & b) const;  // BigInt 与 BigInt 相乘
     SignBigInt operator/(const SignBigInt & b) const;
+    SignBigInt operator%(const SignBigInt & b) const;
     SignBigInt operator>>(unsigned int n) const;
     SignBigInt operator<<(unsigned int n) const;
 
@@ -52,5 +56,22 @@ public:
     friend SignBigInt operator-(long long a, const SignBigInt & b);
     friend SignBigInt operator*(long long a, const SignBigInt & b);
     friend SignBigInt operator/(long long a, const SignBigInt & b);
+    friend SignBigInt operator%(long long a, const SignBigInt & b);
+
+
+    SignBigInt operator+()const;
+    SignBigInt operator-()const;
+
+    SignBigInt operator++();
+    SignBigInt operator++(int);
+    SignBigInt operator--();
+    SignBigInt operator--(int);
+
+    std::string to_string()const;
+    int to_int()const;
+    long to_long()const;
+    long long to_long_long()const;
 };
+
+void strip_leading_sign(std::string& s);
 #endif
